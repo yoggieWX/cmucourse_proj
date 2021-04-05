@@ -7,7 +7,7 @@ from pyrobot import Robot
 
 robot = Robot('locobot')
 
-filename = 'line.npy'
+filename = 'line.npz'
 times = np.load(filename)['time']
 positions = np.load(filename)['pos']
 

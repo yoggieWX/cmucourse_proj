@@ -27,12 +27,24 @@ velocity_array = []
 acc_array = []
 time_array = []
 elaptime = 0
+
+print("Goto start position")
+time.sleep(5)
+print("3...")
+time.sleep(1)
+print("2....")
+time.sleep(1)
+print("1....")
+time.sleep(1)
+print("starting to record")
+
+start = time.time()
 while elaptime < DURATION:
     pos = robot.arm.pose_ee[0]
     time_array.append(elaptime)
     ee_pos_array.append(pos)
     elaptime = time.time() - start
 
-# Save both arrays into npz 
+# Save both arrays. auto saves to .npz 
 filename = input('Save as: ')
 np.savez(filename, time=time_array, pos=ee_pos_array)
