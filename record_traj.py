@@ -40,10 +40,14 @@ print("starting to record")
 
 start = time.time()
 while elaptime < DURATION:
-    pos = robot.arm.pose_ee[0]
+    # pos = robot.arm.pose_ee[0]
+    pos = np.concatenate((robot.arm.pose_ee[0]),axis=None)
+    # TODO: Add vel and acc
     time_array.append(elaptime)
     ee_pos_array.append(pos)
     elaptime = time.time() - start
+    time.sleep(0.5)
+
 
 # Save both arrays. auto saves to .npz 
 filename = input('Save as: ')

@@ -32,3 +32,4 @@ while True:
         move(position)
     else:
         print('please enter a valid command.')
+    # TODO: add exit command
