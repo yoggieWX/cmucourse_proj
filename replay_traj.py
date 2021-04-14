@@ -11,15 +11,18 @@ from pyrobot import Robot
 
 robot = Robot('locobot')
 
-# Load recordings.
-filename = 'test.npz'
+# Change file to load here.
+filename = 'straight.npz'
+
 times = np.load(filename)['time']
 positions = np.load(filename)['pos']
+velocities = np.load(filename)['vel']
+accelerations = np.load(filename)['acc']
 print(f'Number of points: {len(positions)}')
 # import pdb;pdb.set_trace()
 
 for position in positions:
     position = position.tolist()
-    robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=True)
-    time.sleep(0.1)
+    robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=False)
+    # time.sleep(0.1)
     # print(position)
