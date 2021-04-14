@@ -1,25 +1,32 @@
+'''
+Fits a DMP from EE xyz position velocity and acceleration. 
+Generates trajectory for the learned skill.
+'''
 import math
 import numpy as np
 
+from pyrobot import Robot
+
 class DMP:
+
     def __init__(self, num_basis):
         self.K = 25 * 25 / 4
         self.B = 25
         self.centers = np.linspace(0, 1, num_basis) # Basis function centers
         self.width = (0.65 * (1. / (num_basis - 1.)) ** 2) # Basis function widths
-        self.duration = 3
+        self.duration = 3 # TODO: Load this from recording
         self.dt = 0.003
 
     def learn_weights(self, filename):
         '''
-        From  recorded disp, vel and acc datas, learn DMP weights 
+        Learn DMP weights from recordings
         '''
         data = np.load(filename)
         times = data['time']
-        disps = data['pos']
-        vels = data['vel']
-        accs = data['acc']
-        duration = times[-1]
+        positions = data['pos']
+        velocities = data['vel']
+        accelerations = data['acc']
+        duration = 3.0 # TODO: Load this from recording
 
         PHI = []
         forcing_function = []
@@ -28,20 +35,20 @@ class DMP:
             phi = phi / np.sum(phi)
             PHI.append(phi)
 
-            f = ((accs[i] * duration ** 2) - self.K * (disps[-1] - disps[i]) + self.B * (vels[i] * duration)) / (disps[-1] - disp[0])
+            f = ((accelerations[i] * duration ** 2) - self.K * (positions[-1] - positions[i]) + self.B * (velocities[i] * duration)) / (positions[-1] - positions[0])
             forcing_function.append(f)
 
         # Calculate weights via linear regression
-        self.weights = np.matmul(np.matmul(np.linalg.inv(np.matmul(np.transpose(PHI),PHI)),np.transpose(PHI)),F)
+        self.weights = np.matmul(np.matmul(np.linalg.inv(np.matmul(np.transpose(PHI),PHI)),np.transpose(PHI)), forcing_function)
 
         # Save the weights file to save relearning time
-        np.save('DMPweights.npy', weights=self.weights)
+        np.save('DMPweights.npy', self.weights)
 
     def load_weights(self, filename):
         '''
         Load weights from npy file
         '''
-        self.weights = np.load(filename)['weights']
+        self.weights = np.load(filename)
 
     def generate_traj(self, start, goal):
         '''
@@ -53,11 +60,11 @@ class DMP:
         pose_goal = np.array(goal)
         vel = np.zeros(3)
         acc = np.zeros(3)
-        dmp_trajectory = np.zeros(2000)
-        dmp_trajectory[0] = (pose_start)
+        dmp_trajectory = []
+        dmp_trajectory.append(pose_start.tolist())
 
         t = 0
-        for i in range(2000):
+        for i in range(1000):
             t = t + self.dt
             if t < self.duration:
                 Phi = [math.exp(-0.5 * ((t/self.duration) - center) ** 2 / self.width) for center in self.centers]
@@ -69,16 +76,21 @@ class DMP:
             vel = vel + acc * self.dt
             # import pdb;pdb.set_trace()
             pose = pose + vel * self.dt
-            dmp_trajectory[i] = pose
+            dmp_trajectory.append(pose.tolist())
 
         return dmp_trajectory
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     DMP = DMP(5)
-    DMP.learn_weights('line.npy')
+    print('learning weights')
+    DMP.learn_weights('straight.npz')
     # DMP.load_weights('DMPweights.npy')
-    trajectory = DMP.generate_traj([0.438, 0, 0.25], [0.338, 0, 0.25])
+    print('generating trajectory')
+    trajectory = DMP.generate_traj([0.338, 0, 0.25], [0.418, 0, 0.25])
+    robot = Robot('locobot')
+    print('moving')
     # TODO: set position directly in generate_traj?
     for position in trajectory:
-        robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=True)
+        robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=False)
+        # time.sleep(0.1)
