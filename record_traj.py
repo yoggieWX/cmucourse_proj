@@ -11,6 +11,7 @@ from pyrobot import Robot
 
 # Time in seconds to record for
 DURATION = 3
+TIME_BETWEEN_STEPS = 0.1
 
 arm_config = dict(control_mode='torque')
 robot = Robot('locobot', arm_config=arm_config)
@@ -28,27 +29,23 @@ acc_array = []
 time_array = []
 elaptime = 0
 
-print("Goto start position")
-time.sleep(5)
-print("3...")
-time.sleep(1)
-print("2....")
-time.sleep(1)
-print("1....")
-time.sleep(1)
-print("starting to record")
+print("Go to start position")
+for t in range(3,0,-1):
+    print(f'{t}...', end='')
+    time.sleep(1)
+
+print("\nStarting to record")
 
 start = time.time()
 while elaptime < DURATION:
-    # pos = robot.arm.pose_ee[0]
-    pos = np.concatenate((robot.arm.pose_ee[0]),axis=None)
+    elaptime = time.time() - start
+    # TODO: Check data format
+    pos = np.concatenate((robot.arm.pose_ee[0]), axis=None)
     # TODO: Add vel and acc
     time_array.append(elaptime)
     ee_pos_array.append(pos)
-    elaptime = time.time() - start
-    time.sleep(0.5)
+    time.sleep(TIME_BETWEEN_STEPS)
 
-
-# Save both arrays. auto saves to .npz 
+# Save both lists. auto saves to .npz 
 filename = input('Save as: ')
 np.savez(filename, time=time_array, pos=ee_pos_array)
