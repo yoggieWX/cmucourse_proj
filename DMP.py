@@ -4,8 +4,10 @@ Generates trajectory for the learned skill.
 '''
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
-from pyrobot import Robot
+
+# from pyrobot import Robot
 
 class DMP:
 
@@ -64,7 +66,7 @@ class DMP:
         dmp_trajectory.append(pose_start.tolist())
 
         t = 0
-        for i in range(1000):
+        for i in range(1500):
             t = t + self.dt
             if t < self.duration:
                 Phi = [math.exp(-0.5 * ((t/self.duration) - center) ** 2 / self.width) for center in self.centers]
@@ -88,9 +90,25 @@ if __name__ == "__main__":
     # DMP.load_weights('DMPweights.npy')
     print('generating trajectory')
     trajectory = DMP.generate_traj([0.338, 0, 0.25], [0.418, 0, 0.25])
-    robot = Robot('locobot')
+    # import pdb; pdb.set_trace()
+    fig,axes = plt.subplots(3)
+    axes[0].plot([trajectory[i][0] for i in range(len(trajectory))])
+    axes[0].annotate(str(trajectory[0][0]),xy=(0,trajectory[0][0]))
+    axes[0].annotate(str(trajectory[-1][0]),xy=(1000,trajectory[-1][0]))
+    axes[0].set_ylabel('X(m)')
+    # print(dir(axes[0].yaxis))s
+
+
+    axes[1].plot([trajectory[i][1] for i in range(len(trajectory))])
+    axes[1].set_ylabel('Y(m)')
+    axes[2].plot([trajectory[i][2] for i in range(len(trajectory))])
+    axes[2].set_ylabel('Z(m)')
+
+    plt.show()
+
+    # robot = Robot('locobot')
     print('moving')
     # TODO: set position directly in generate_traj?
-    for position in trajectory:
-        robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=False)
+    # for position in trajectory:
+    #     robot.arm.set_ee_pose_pitch_roll(position, pitch=1.57, roll=0, plan=False)
         # time.sleep(0.1)
